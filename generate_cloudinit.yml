@@ -7,3 +7,23 @@
       ansible.builtin.template:
         src: rancher-lima.yml.j2
         dest: rancher-lima.yml
+    - name: Create rancher-helmchart configuration
+      ansible.builtin.template:
+        src: rancher-helmchart.yml.j2
+        dest: rancher-helmchart.yml
+    - name: Create certmanager-helmchart configuration
+      ansible.builtin.template:
+        src: certmanager-helmchart.yml.j2
+        dest: certmanager-helmchart.yml
+    - name: Create certmanager-helm-values configuration
+      ansible.builtin.template:
+        src: certmanager-helm-values.yml.j2
+        dest: certmanager-helm-values.yml
+    - name: Create rancher-helm-values configuration
+      ansible.builtin.template:
+        src: rancher-helm-values.yml.j2
+        dest: rancher-helm-values.yml
+    - name: Create cloud-init configuration
+      ansible.builtin.template:
+        src: cloud-init.yml.j2     
+        dest: cloud-init.yml

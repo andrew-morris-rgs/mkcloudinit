@@ -1,0 +1,14 @@
+{%- set rancher_hostname = rancher_hostname | default('rancher.yourdomain.com') %}
+{%- set rancher_bootstrap_password = rancher_bootstrap_password | default('') %}
+{%- set rancher_replicas = rancher_replicas | default(3) +%}
+{%- set rancher_stig_compliance = rancher_stig_compliance | default(true) +%}
+hostname: {{ rancher_hostname }}
+{%- if rancher_bootstrap_password %}
+bootstrapPassword: {{ rancher_bootstrap_password }}
+{%- endif +%}
+replicas: {{ rancher_replicas }}
+{%- if rancher_stig_compliance %}
+## STIG Configs
+auditLog:
+  level: 2
+{%- endif +%}
