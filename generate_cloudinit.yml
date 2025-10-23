@@ -3,10 +3,6 @@
   hosts: localhost
   gather_facts: true
   tasks:
-    - name: Create rancher-lima configuration
-      ansible.builtin.template:
-        src: rancher-lima.yml.j2
-        dest: rancher-lima.yml
     - name: Create rancher-helmchart configuration
       ansible.builtin.template:
         src: rancher-helmchart.yml.j2
@@ -27,3 +23,14 @@
       ansible.builtin.template:
         src: cloud-init.yml.j2     
         dest: cloud-init.yml
+    - name: Base64 encode the rendered template
+      command: base64 -w 0 cloud-init.yml
+      register: base64_cloud_init
+    - name: Create rancher-harvester configuration
+      ansible.builtin.template:
+        src: rancher-harvester.yml.j2
+        dest: rancher-harvester.yml
+    - name: Create rancher-lima configuration
+      ansible.builtin.template:
+        src: rancher-lima.yml.j2
+        dest: rancher-lima.yml

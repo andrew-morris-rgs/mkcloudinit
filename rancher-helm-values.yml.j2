@@ -3,12 +3,12 @@
 {%- set rancher_replicas = rancher_replicas | default(3) +%}
 {%- set rancher_stig_compliance = rancher_stig_compliance | default(true) +%}
 hostname: {{ rancher_hostname }}
-{%- if rancher_bootstrap_password %}
+{%- if rancher_bootstrap_password +%}
 bootstrapPassword: {{ rancher_bootstrap_password }}
 {%- endif +%}
 replicas: {{ rancher_replicas }}
-{%- if rancher_stig_compliance %}
+{%- if rancher_stig_compliance +%}
 ## STIG Configs
 auditLog:
   level: 2
-{%- endif +%}
+{%- endif %}

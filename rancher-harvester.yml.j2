@@ -1,0 +1,116 @@
+{%- set rancher_vm_namespace = rancher_vm_namespace | default('default') -%}
+{%- set rancher_cloudinit_secret_name = rancher_cloudinit_secret_name | default('rancher-cloud-init') -%}
+{%- set rancher_networkconfig_secret_name = rancher_networkconfig_secret_name | default(rancher_cloudinit_secret_name) -%}
+{%- set rancher_pvc_name = rancher_pvc_name | default('rancher-disk-0') -%}
+{%- set rancher_vm_ip = rancher_vm_ip | default('127.0.0.1') -%}
+  {%- set cert_manager_replica_count = cert_manager_replica_count | default(1) -%}
+  {%- set cert_manager_webhook_replica_count = cert_manager_webhook_replica_count | default(1) -%}
+  {%- set cert_manager_cainjector_replica_count = cert_manager_cainjector_replica_count | default(1) -%}
+  {%- set rancher_replicas = rancher_replicas | default(1) -%}
+{%- set rancher_hostname = rancher_hostname | default('rancher-' + rancher_vm_ip|string + '.sslip.io') -%}
+{%- set rancher_vm_mac_address = rancher_vm_mac_address | default(false) -%}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    harvesterhci.io/cloud-init-template: harvester
+  name: {{ rancher_cloudinit_secret_name }}
+  namespace: {{ rancher_vm_namespace }}
+type: Opaque
+data:
+  networkdata: ""
+  userdata: {{ base64_cloud_init.stdout }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ rancher_pvc_name }}
+  namespace: {{ rancher_vm_namespace }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 150Gi
+  storageClassName: longhorn-image-4k9g4
+  volumeMode: Block
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: {{ rancher_hostname }}
+  namespace: {{ rancher_vm_namespace }}
+spec:
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        harvesterhci.io/vmName: {{ rancher_hostname }}
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: network.harvesterhci.io/mgmt
+                    operator: In
+                    values:
+                      - 'true'
+      architecture: amd64
+      domain:
+        cpu:
+          cores: 4
+          sockets: 1
+          threads: 1
+        devices:
+          disks:
+            - bootOrder: 1
+              disk:
+                bus: virtio
+              name: disk-0
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          inputs:
+            - bus: usb
+              name: tablet
+              type: tablet
+          interfaces:
+            - bridge: {}
+              {%- if rancher_vm_mac_address +%}
+              macAddress: {{ rancher_vm_mac_address }}
+              {%- endif +%}
+              model: virtio
+              name: default
+        features:
+          acpi:
+            enabled: true
+        machine:
+          type: q35
+        memory:
+          guest: 16Gi
+        resources:
+          limits:
+            cpu: '4'
+            memory: 16Gi
+          requests:
+            cpu: 250m
+            memory: 10922Mi
+      evictionStrategy: LiveMigrateIfPossible
+      hostname: rancher
+      networks:
+        - multus:
+            networkName: default/out
+          name: default
+      terminationGracePeriodSeconds: 120
+      volumes:
+        - name: disk-0
+          persistentVolumeClaim:
+            claimName: {{ rancher_pvc_name }}
+        - cloudInitNoCloud:
+            networkDataSecretRef:
+              name: {{ rancher_networkconfig_secret_name }}
+            secretRef:
+              name: {{ rancher_cloudinit_secret_name }}
+          name: cloudinitdisk

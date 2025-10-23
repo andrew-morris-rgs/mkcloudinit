@@ -1,0 +1,33 @@
+{% set nutanix_node_driver_version = nutanix_node_driver_version | default('3.6.0') %}
+{% set nutanix_node_driver_url = nutanix_node_driver_url | default("https://github.com/nutanix/docker-machine/releases/download/v" + nutanix_node_driver_version + "/docker-machine-driver-nutanix") %}
+{% set nutanix_node_driver_checksum = nutanix_node_driver_checksum | default('d9710fe31a1357d1bbd57539a4b0b00e3ab3550fcaeffea18cbc145cb4e9b22f') %}
+{% set nutanix_rancher_ui_driver_domain = nutanix_rancher_ui_driver_domain | default('nutanix.github.io') %}
+{% set nutanix_rancher_ui_driver_url = nutanix_rancher_ui_driver_url | default("https://" + nutanix_rancher_ui_driver_domain + "/nutanix-rancher-ui-driver/v" + nutanix_node_driver_version + "/component.js") %}
+---
+apiVersion: management.cattle.io/v3
+kind: NodeDriver
+metadata:
+  annotations:
+    lifecycle.cattle.io/create.node-driver-controller: "true"
+    privateCredentialFields: password
+    publicCredentialFields: endpoint,username,port
+  finalizers:
+  - controller.cattle.io/node-driver-controller
+  labels:
+    cattle.io/creator: norman
+  name: nutanix
+spec:
+  active: true
+  addCloudCredential: true
+  builtin: false
+  checksum: "d9710fe31a1357d1bbd57539a4b0b00e3ab3550fcaeffea18cbc145cb4e9b22f"
+  description: "Nutanix {{ nutanix_node_driver_version }} Node Driver for RKE1 and RKE2"
+  displayName: "nutanix"
+  externalId: ""
+  uiUrl: "{{ nutanix_rancher_ui_driver_url }}" # configurable per location of .js file in environment
+  url: "{{ nutanix_node_driver_url }}" # configurable per location of driver binary in environment
+  whitelistDomains:
+  - "{{ nutanix_rancher_ui_driver_domain }}" # Configure according to environment, default: nutanix.github.io
+  - # URL2
+  - # URL3
+  - # URLN
