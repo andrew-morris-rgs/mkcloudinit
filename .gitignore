@@ -8,5 +8,6 @@ certmanager/fleet.yml
 localcluster/cloud-init.yml
 localcluster/localcluster.yml
 localcluster/fleet.yml
+rancher-harvester.yml
 rancher-lima.yml
 .vscode
