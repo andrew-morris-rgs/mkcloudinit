@@ -5,26 +5,26 @@
   tasks:
     - name: Create rancher-helmchart configuration
       ansible.builtin.template:
-        src: rancher-helmchart.yml.j2
-        dest: rancher-helmchart.yml
+        src: rancher/rancher-helmchart.yml.j2
+        dest: rancher/rancher-helmchart.yml
     - name: Create certmanager-helmchart configuration
       ansible.builtin.template:
-        src: certmanager-helmchart.yml.j2
-        dest: certmanager-helmchart.yml
+        src: certmanager/certmanager-helmchart.yml.j2
+        dest: certmanager/certmanager-helmchart.yml
     - name: Create certmanager-helm-values configuration
       ansible.builtin.template:
-        src: certmanager-helm-values.yml.j2
-        dest: certmanager-helm-values.yml
+        src: certmanager/certmanager-helm-values.yml.j2
+        dest: certmanager/certmanager-helm-values.yml
     - name: Create rancher-helm-values configuration
       ansible.builtin.template:
-        src: rancher-helm-values.yml.j2
-        dest: rancher-helm-values.yml
+        src: rancher/rancher-helm-values.yml.j2
+        dest: rancher/rancher-helm-values.yml
     - name: Create cloud-init configuration
       ansible.builtin.template:
-        src: cloud-init.yml.j2     
-        dest: cloud-init.yml
+        src: localcluster/cloud-init.yml.j2     
+        dest: localcluster/cloud-init.yml
     - name: Base64 encode the rendered template
-      command: base64 -w 0 cloud-init.yml
+      command: base64 -w 0 localcluster/cloud-init.yml
       register: base64_cloud_init
     - name: Create rancher-harvester configuration
       ansible.builtin.template:
@@ -34,3 +34,12 @@
       ansible.builtin.template:
         src: rancher-lima.yml.j2
         dest: rancher-lima.yml
+    - name: Create local-cluster.yml
+      ansible.builtin.template:
+        src: localcluster/localcluster.yml.j2
+        dest: localcluster/localcluster.yml
+    - name: Create Fleet config for cluster 
+      ansible.builtin.template:
+        src: cluster-gitrepo.yml.j2
+        dest: cluster-gitrepo.yml
+

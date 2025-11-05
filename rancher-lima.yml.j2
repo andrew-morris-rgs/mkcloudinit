@@ -61,6 +61,6 @@ provision:
       #!/bin/bash
       cat <<EOF > /etc/cloud/cloud.cfg.d/99_custom.cfg
       {%- filter indent(width=6) %}
-      {%- include 'cloud-init.yml.j2' %}
+      {%- include 'localcluster/cloud-init.yml.j2' %}
       {%- endfilter +%}
       EOF

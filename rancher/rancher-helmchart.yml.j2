@@ -1,4 +1,4 @@
-{%- set rancher_version = rancher_version | default('v2.11.2') %}
+{%- set rancher_version = rancher_version | default('v2.12.3') %}
 {%- set rancher_repo = rancher_repo | default('https://releases.rancher.com/server-charts/stable') %}
 ---
 apiVersion: helm.cattle.io/v1
@@ -14,5 +14,5 @@ spec:
     version: {{ rancher_version }}
     valuesContent: |-
      {%- filter indent(width=6) %}
-     {%- include 'rancher-helm-values.yml.j2' %}
+     {%- include 'rancher/rancher-helm-values.yml.j2' %}
      {%- endfilter %}

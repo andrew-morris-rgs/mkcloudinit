@@ -1,8 +1,12 @@
 
-rancher-helm-values.yml
-rancher-helmchart.yml
-certmanager-helm-values.yml
-certmanager-helmchart.yml
-cloud-init.yml
+rancher/rancher-helm-values.yml
+rancher/rancher-helmchart.yml
+rancher/fleet.yml
+certmanager/certmanager-helm-values.yml
+certmanager/certmanager-helmchart.yml
+certmanager/fleet.yml
+localcluster/cloud-init.yml
+localcluster/localcluster.yml
+localcluster/fleet.yml
 rancher-lima.yml
 .vscode

@@ -1,0 +1,29 @@
+
+apiVersion: fleet.cattle.io/v1alpha1
+kind: GitRepo
+metadata:
+  name: rancher-cluster-repo
+  annotations:
+    {}
+    #  key: string
+  labels:
+    {}
+    #  key: string
+  namespace: fleet-local
+spec:
+  branch: main
+  correctDrift:
+    enabled: true
+  clientSecretName: gitops-git-auth
+  paths:
+    - cluster-gitops/rancher/local-cluster
+    - cluster-gitops/rancher/cert-manager
+    - cluster-gitops/rancher/rancher
+  repo: git@github.com:andrew-morris-rgs/rancher-dev-env.git
+  targets:
+    - clusterSelector:
+        matchExpressions:
+          - key: provider.cattle.io
+            operator: NotIn
+            values:
+              - harvester

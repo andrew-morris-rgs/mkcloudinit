@@ -9,6 +9,13 @@
   {%- set rancher_replicas = rancher_replicas | default(1) -%}
 {%- set rancher_hostname = rancher_hostname | default('rancher-' + rancher_vm_ip|string + '.sslip.io') -%}
 {%- set rancher_vm_mac_address = rancher_vm_mac_address | default(false) -%}
+{%- set rancher_vm_cpu = rancher_vm_cpu | default(4) -%}
+{%- set rancher_vm_memory = rancher_vm_memory | default('8Gi') -%}
+{%- set rancher_vm_disk_size = rancher_vm_disk_size | default('50Gi') -%}
+{%- set rancher_vm_namespace = rancher_vm_namespace | default('default') -%}
+{%- set rancher_cloudinit_secret_name = rancher_cloudinit_secret_name | default('rancher-cloudinit') -%}
+{%- set rancher_network_name = rancher_network_name | default('default/rancher-mgmt') -%}
+{%- set os_image_storageclassname = os_image_storageclassname | default('longhorn-image-h2sj5') -%}
 ---
 apiVersion: v1
 kind: Secret
@@ -32,8 +39,8 @@ spec:
     - ReadWriteMany
   resources:
     requests:
-      storage: 150Gi
-  storageClassName: longhorn-image-4k9g4
+      storage: {{ rancher_vm_disk_size }} 
+  storageClassName: {{ os_image_storageclassname }}
   volumeMode: Block
 ---
 apiVersion: kubevirt.io/v1
@@ -60,7 +67,7 @@ spec:
       architecture: amd64
       domain:
         cpu:
-          cores: 4
+          cores: {{ rancher_vm_cpu}}
           sockets: 1
           threads: 1
         devices:
@@ -89,11 +96,11 @@ spec:
         machine:
           type: q35
         memory:
-          guest: 16Gi
+          guest: {{ rancher_vm_memory }}
         resources:
           limits:
-            cpu: '4'
-            memory: 16Gi
+            cpu: '{{ rancher_vm_cpu }}'
+            memory: {{ rancher_vm_memory }}
           requests:
             cpu: 250m
             memory: 10922Mi
@@ -101,7 +108,7 @@ spec:
       hostname: rancher
       networks:
         - multus:
-            networkName: default/out
+            networkName: {{ rancher_network_name }}
           name: default
       terminationGracePeriodSeconds: 120
       volumes:

@@ -1,0 +1,163 @@
+{%- set rke2_servers = rke2_servers | default(['localhost']) -%}
+{%- set rke2_agents = rke2_agents | default(false) -%}
+{%- set install_rke2_server = install_rke2_server | default(true) -%}
+{%- set default_admin = default_admin | default(false) -%}
+{%- set admin_ssh_keys = admin_ssh_keys | default(false) -%}
+{%- set install_certmanager = install_certmanager | default(true) -%}
+{%- set install_rancher = install_rancher | default(true) -%}
+{%- set rke2_ansible_playbook_url = rke2_ansible_playbook_url | default('https://github.com/rancherfederal/rke2-ansible.git') -%}
+{%- set enable_nutanix_rancher_addon = enable_nutanix_rancher_addon | default(false) -%}
+{%- set rke2_version = rke2_version | default('v1.33.5+rke2r1') -%}
+{%- set rke2_custom_registry = rke2_custom_registry | default(false) -%}
+{%- if rke2_custom_registry %}
+  {%- set rke2_custom_registry_ca = rke2_custom_registry_ca | default(false) -%}
+  {%- set rke2_custom_registry_cert = rke2_custom_registry_cert | default(false) -%}
+  {%- set rke2_custom_registry_key = rke2_custom_registry_key | default(false) -%}
+  {%- set rke2_custom_registry_username = rke2_custom_registry_username | default(false) -%}
+  {%- set rke2_custom_registry_password = rke2_custom_registry_password | default(false) -%}
+  {%- set rke2_custom_registry_token = rke2_custom_registry_token | default(false) -%}
+  {%- set rke2_custom_registry_endpoint = rke2_custom_registry_endpoint | default("https://" ~ rke2_custom_registry ~ "/v2") -%}
+  {%- set rke2_custom_registry_insecure_skip_verify = rke2_custom_registry_insecure_skip_verify | default(false) -%}
+  {%- set rke2_custom_registry_config_file_path = "/etc/rancher/rke2/registries.yaml" -%}
+{%- else -%}
+  {%- set rke2_custom_registry_config_file_path = rke2_custom_registry_config_file_path | default( false ) -%}
+{%- endif +%}
+#cloud-config 
+package_update: true
+package_upgrade: true
+{%- if default_admin +%}
+users:
+- default
+- name: admin
+  sudo: ['ALL=(ALL) NOPASSWD:ALL']
+  shell: /bin/bash
+  {%- if admin_ssh_keys +%}
+  ssh_authorized_keys:
+  {%- for key in admin_ssh_keys +%}
+  - {{ key }}
+  {%- endfor +%}
+  {%- endif +%}
+  {%- if admin_password +%}
+  passwd: {{ admin_password }}
+  lock_passwd: false
+  {%- endif +%}
+{%- endif +%}
+
+{%- if install_rke2_server %}
+
+packages:
+- git
+- ansible-core
+runcmd:
+- ansible-pull -U {{ rke2_ansible_playbook_url }} -i /etc/ansible/inventory/hosts.yml /etc/ansible/playbooks/rke2-install-local.yml
+write_files:
+- path: /etc/ansible/ansible.cfg
+  content: |
+    [defaults]
+    roles_path = /etc/ansible/roles
+    playbook_dir = /etc/ansible/playbooks
+- path: /etc/ansible/playbooks/rke2-install-local.yml
+  content: |
+    ---
+    - name: Install RKE2 Server
+      hosts:
+      {%- for host in rke2_servers +%}
+      - {{ host }}
+      {% endfor +%}
+      {%- if rke2_agents +%}
+      {%- for host in rke2_agents +%}
+      - {{ host }}
+      {%- endfor +%}
+      {%- endif -%}
+      roles:
+      - role: rke2
+- path: /etc/ansible/inventory/hosts.yml
+  content: |
+    ---
+    rke2_cluster:
+      children:
+        rke2_servers:
+          hosts:
+            {%- for host in rke2_servers +%}
+            {{ host }}:
+              {%- if rke2_version +%}
+              rke2_install_version: {{ rke2_version }}
+              {%- endif %}
+              {%- if rke2_custom_registry_config_file_path +%}
+              rke2_registry_config_file_path: {{ rke2_custom_registry_config_file_path }}
+              {%- endif %}
+            {%- endfor %}
+        {%- if rke2_agents +%}
+        rke2_agents:
+          hosts:
+            {%- for host in rke2_agents +%}
+            {{ host }}:
+              {% if rke2_version +%}
+              rke2_version: {{ rke2_version }}
+              {%- endif %}
+              {%- if rke2_custom_registry_config_file_path +%}
+              rke2_registry_config_file_path: {{ rke2_custom_registry_config_file_path }}
+              {%- endif %}
+            {%- endfor %}
+        {%- endif %}
+{%- endif +%}
+{%- if rke2_custom_registry +%}
+{# TODO modify to take multiple registries and values, after figuring out good value mapping #}
+- path: /etc/rancher/rke2/registries.yaml
+  content: |
+    mirrors:
+      {{ rke2_custom_registry }}:
+        endpoint:
+          - {{ rke2_custom_registry_endpoint }}
+    configs:
+      {{ rke2_custom_registry }}:
+        {%- if rke2_custom_registry_username or rke2_custom_registry_token +%}
+        auth:
+          {%- if rke2_custom_registry_username +%}
+          username: <BASIC AUTH USERNAME>
+          password: <BASIC AUTH PASSWORD>
+          {%- endif %}
+          {%- if rke2_custom_registry_token +%}
+          token: {{ rke2_custom_registry_token }}
+          {%- endif %}
+        tls:
+          {%- if rke2_custom_registry_ca_file +%}
+          ca_file: {{ rke2_custom_registry_ca_file }}
+          {%- endif +%}
+          {%- if rke2_custom_registry_cert_file +%}
+          cert_file: {{ rke2_custom_registry_cert_file }}
+          {%- endif %}
+          {%- if rke2_custom_registry_key_file +%}
+          key_file: {{ rke2_custom_registry_key_file }}
+          {%- endif %}
+          insecure_skip_verify: {{ rke2_custom_registry_insecure_skip_verify }}
+        {%- endif +%}
+{%- endif +%}
+{%- if install_certmanager +%}
+- path: /var/lib/rancher/rke2/server/manifests/post-deploy-manifests/cert-manager.yaml
+  content: |
+    {% filter indent(width=4) %}
+    {%- include 'certmanager/certmanager-helmchart.yml.j2' %}
+    {%- endfilter %}
+{%- endif %}
+{%- if install_rancher +%}
+- path: /var/lib/rancher/rke2/server/manifests/post-deploy-manifests/rancher.yaml
+  content: |
+    {% filter indent(width=4) %}
+    {%- include 'rancher/rancher-helmchart.yml.j2' %}
+    {%- endfilter %}
+  {%- if enable_nutanix_rancher_addon %}
+- path: /var/lib/rancher/rke2/server/manifests/post-deploy-manifests/nutanix-rancher-addon.yaml
+  content: |
+    {% filter indent(width=4) %}
+    {%- include 'rancher/addons/nutanix-rancher-addon-helmchart.yml.j2' %}
+    {%- endfilter +%}
+  {% endif %}
+{%- endif %}
+
+
+
+
+
+
+

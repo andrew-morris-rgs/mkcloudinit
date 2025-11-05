@@ -1,0 +1,11 @@
+{%- set rke2_version = rke2_version | default('v1.33.5+rke2r1') -%}
+---
+apiVersion: management.cattle.io/v3
+kind: Cluster
+metadata:
+  labels:
+    provider.cattle.io: rke2
+  name: local
+spec:
+  rke2Config:
+    kubernetesVersion: {{ rke2_version }}
