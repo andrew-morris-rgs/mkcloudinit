@@ -23,17 +23,21 @@
       ansible.builtin.template:
         src: localcluster/cloud-init.yml.j2     
         dest: localcluster/cloud-init.yml
+    - name: Create Fleet repo Helmchart configuration
+      ansible.builtin.template:
+        src: localcluster/fleet/fleet-repo-helmchart.yml.j2
+        dest: localcluster/fleet/fleet-repo-helmchart.yml
     - name: Base64 encode the rendered template
       command: base64 -w 0 localcluster/cloud-init.yml
       register: base64_cloud_init
     - name: Create rancher-harvester configuration
       ansible.builtin.template:
-        src: rancher-harvester.yml.j2
-        dest: rancher-harvester.yml
+        src: infra/harvester/rancher-harvester.yml.j2
+        dest: infra/harvester/rancher-harvester.yml
     - name: Create rancher-lima configuration
       ansible.builtin.template:
-        src: rancher-lima.yml.j2
-        dest: rancher-lima.yml
+        src: infra/lima/rancher-lima.yml.j2
+        dest: infra/lima/rancher-lima.yml
     - name: Create local-cluster.yml
       ansible.builtin.template:
         src: localcluster/localcluster.yml.j2
@@ -42,4 +46,8 @@
       ansible.builtin.template:
         src: cluster-gitrepo.yml.j2
         dest: cluster-gitrepo.yml
+    - name: Create rancher-aws.tf config
+      ansible.builtin.template:
+        src: infra/aws/rancher-aws.tf.j2
+        dest: infra/aws/rancher-aws.tf
 

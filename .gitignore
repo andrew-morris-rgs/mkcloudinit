@@ -6,8 +6,11 @@ certmanager/certmanager-helm-values.yml
 certmanager/certmanager-helmchart.yml
 certmanager/fleet.yml
 localcluster/cloud-init.yml
+localcluster/cloud-init-aws.yml
 localcluster/localcluster.yml
 localcluster/fleet.yml
-rancher-harvester.yml
-rancher-lima.yml
+infra/harvester/rancher-harvester.yml
+infra/lima/rancher-lima.yml
+infra/aws/rancher-aws.tf
+localcluster/fleet/fleet-repo-helmchart.yml
 .vscode

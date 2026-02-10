@@ -14,8 +14,52 @@
 {%- set rancher_vm_disk_size = rancher_vm_disk_size | default('50Gi') -%}
 {%- set rancher_vm_namespace = rancher_vm_namespace | default('default') -%}
 {%- set rancher_cloudinit_secret_name = rancher_cloudinit_secret_name | default('rancher-cloudinit') -%}
-{%- set rancher_network_name = rancher_network_name | default('default/rancher-mgmt') -%}
-{%- set os_image_storageclassname = os_image_storageclassname | default('longhorn-image-h2sj5') -%}
+{%- set rancher_network_namespace = rancher_network_namespace | default('default') -%}
+{%- set rancher_network_name = rancher_network_name | default('rancher-mgmt') -%}
+{%- set os_image_name = os_image_name | default('rocky-9-x86-64-qcow2') -%}
+{%- set os_image_url = os_image_url | default('https://dl.rockylinux.org/pub/rocky/9/images/x86_64/Rocky-9-GenericCloud-Base.latest.x86_64.qcow2') -%}
+---
+apiVersion: harvesterhci.io/v1beta1
+kind: VirtualMachineImage
+metadata:
+  name: {{ os_image_name }}
+  annotations:
+    harvesterhci.io/storageClassName: harvester-longhorn
+  labels:
+    harvesterhci.io/image-type: raw_qcow2
+    harvesterhci.io/os-type: linux
+  namespace: default
+spec:
+  backend: backingimage
+  checksum: ''
+  displayName: {{ os_image_name }}
+  pvcName: ''
+  pvcNamespace: ''
+  retry: 3
+  sourceType: download
+  storageClassParameters:
+    migratable: 'true'
+    numberOfReplicas: '3'
+    staleReplicaTimeout: '30'
+    #  key: string
+  targetStorageClassName: harvester-longhorn
+  url: >-
+    {{ os_image_url }}
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: {{ rancher_network_name }}
+  annotations:
+    {}
+    #  key: string
+  labels:
+    {}
+    #  key: string
+  namespace: {{ rancher_network_namespace }}
+spec:
+  config: >-
+    {"cniVersion":"0.3.1","name":"{{ rancher_network_name }}","type":"bridge","bridge":"mgmt-br","promiscMode":true,"ipam":{}}
 ---
 apiVersion: v1
 kind: Secret
@@ -32,6 +76,8 @@ data:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
+  annotations:
+    harvesterhci.io/imageId: default/{{ os_image_name }}
   name: {{ rancher_pvc_name }}
   namespace: {{ rancher_vm_namespace }}
 spec:
@@ -40,7 +86,7 @@ spec:
   resources:
     requests:
       storage: {{ rancher_vm_disk_size }} 
-  storageClassName: {{ os_image_storageclassname }}
+  storageClassName: longhorn-{{ os_image_name }}
   volumeMode: Block
 ---
 apiVersion: kubevirt.io/v1
@@ -103,12 +149,12 @@ spec:
             memory: {{ rancher_vm_memory }}
           requests:
             cpu: 250m
-            memory: 10922Mi
+            memory: {{ rancher_vm_memory }}
       evictionStrategy: LiveMigrateIfPossible
       hostname: rancher
       networks:
         - multus:
-            networkName: {{ rancher_network_name }}
+            networkName: {{rancher_network_namespace}}/{{ rancher_network_name }}
           name: default
       terminationGracePeriodSeconds: 120
       volumes:

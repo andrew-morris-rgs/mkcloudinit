@@ -1,0 +1,55 @@
+{%- set gitops_repo_url = gitops_repo_url | default('git@github.com:andrew-morris-rgs/rancher-dev-env.git') -%}
+{%- set gitops_branch = gitops_branch | default('main') -%}
+{%- set add_harvester_ds_gitops = add_harvester_ds_gitops | default(true) -%}
+{%- set add_aws_ds_gitops = add_aws_ds_gitops | default(true) -%}
+{%- set add_aws_us_east_gitops = add_aws_us_east_gitops | default(true) -%}
+{%- set add_aws_us_west_gitops = add_aws_us_west_gitops | default(true) -%}
+{%- set gitops_paths = gitops_paths | default(['cluster-gitops/']) -%}
+{%- if add_harvester_ds_gitops %}
+  {%- set gitops_paths = gitops_paths + ['cluster-gitops/datacenters/dc-1/harvester/clusters/cluster-*'] -%}
+{%- endif -%}
+{%- if add_aws_ds_gitops %}
+  {%- if add_aws_us_east_gitops %}
+    {%- set gitops_paths = gitops_paths + ['cluster-gitops/datacenters/aws/us-east/clusters/cluster-*'] -%}
+  {%- endif -%}
+  {%- if add_aws_us_west_gitops %}
+    {%- set gitops_paths = gitops_paths + ['cluster-gitops/datacenters/aws/us-west/clusters/cluster-*'] -%}
+  {%- endif -%}
+{%- endif -%}
+{%- set gitops_client_secret_name = gitops_client_secret_name | default('gitops-git-auth') -%}
+{%- set gitops_correct_drift_enabled = gitops_correct_drift_enabled | default(true) -%}
+
+---
+apiVersion: fleet.cattle.io/v1alpha1
+kind: GitRepo
+metadata:
+  name: gitops-meta-repo
+  annotations:
+    {}
+    #  key: string
+  labels:
+    {}
+    #  key: string
+  namespace: fleet-local
+spec:
+  branch: {{ gitops_branch }}
+  correctDrift:
+    enabled: {{ gitops_correct_drift_enabled }}
+  clientSecretName: {{ gitops_client_secret_name }}
+  paths:
+    {% for path in gitops_paths %}
+    - {{ path }}
+    {% endfor %}
+  repo: {{ gitops_repo_url }}
+  targets:
+    - clusterSelector:
+        matchExpressions:
+          - key: provider.cattle.io
+            operator: NotIn
+            values:
+              - harvester
+
+
+
+
+
