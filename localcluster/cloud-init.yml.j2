@@ -31,7 +31,7 @@ package_upgrade: true
 users:
 - default
 - name: admin
-  sudo: ['ALL=(ALL) NOPASSWD:ALL']
+  sudo: 'ALL=(ALL) NOPASSWD:ALL'
   shell: /bin/bash
   {%- if admin_ssh_keys +%}
   ssh_authorized_keys:
