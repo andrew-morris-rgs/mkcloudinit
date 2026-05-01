@@ -6,6 +6,14 @@ kind: HelmChart
 metadata:
     name: rancher
     namespace: kube-system
+    annotations:
+        app.kubernetes.io/managed-by: "Helm"
+        meta.helm.sh/release-name: "gitops-meta-repo-cluster-gitops-rancher-cluster"
+        meta.helm.sh/release-namespace: "kube-system"
+    labels:
+        app.kubernetes.io/managed-by: "Helm"
+        meta.helm.sh/release-name: "gitops-meta-repo-cluster-gitops-rancher-cluster"
+        meta.helm.sh/release-namespace: "kube-system
 spec:
     chart: rancher
     repo: {{ rancher_repo }}

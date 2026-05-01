@@ -1,0 +1,393 @@
+
+
+#cloud-config 
+package_update: true
+package_upgrade: true
+users:
+- default
+- name: admin
+  sudo: ['ALL=(ALL) NOPASSWD:ALL']
+  shell: /bin/bash
+  passwd: $y$j9T$HhG7s5GIkeybsU3E2ZVw8/$wFpkE0aXyLma.me1ShzTN0VSgbNfGgBWkhqT.BHb0H7
+  lock_passwd: false
+packages:
+- git
+- ansible-core
+runcmd:
+- ansible-pull -U https://github.com/rancherfederal/rke2-ansible.git -i /etc/ansible/inventory/hosts.yml /etc/ansible/playbooks/rke2-install-local.yml
+write_files:
+- path: /etc/ansible/ansible.cfg
+  content: |
+    [defaults]
+    roles_path = /etc/ansible/roles
+    playbook_dir = /etc/ansible/playbooks
+- path: /etc/ansible/playbooks/rke2-install-local.yml
+  content: |
+    ---
+    - name: Install RKE2 Server
+      hosts:
+      - localhost
+      roles:
+      - role: rke2
+- path: /etc/ansible/inventory/hosts.yml
+  content: |
+    ---
+    rke2_cluster:
+      children:
+        rke2_servers:
+          hosts:
+            localhost:
+              rke2_install_version: v1.32.9-rke2r1
+              rke2_registry_config_file_path: /etc/rancher/rke2/registries.yaml
+- path: /etc/rancher/rke2/registries.yaml
+  content: |
+    mirrors:
+      true:
+        endpoint:
+          - https://true/v2
+    configs:
+      true:
+- path: /var/lib/rancher/rke2/server/manifests/post-deploy-manifests/cert-manager.yaml
+  content: |
+    ---
+    apiVersion: helm.cattle.io/v1
+    kind: HelmChart
+    metadata:
+        name: cert-manager
+        namespace: kube-system
+        annotations:
+            app.kubernetes.io/managed-by: "Helm"
+            meta.helm.sh/release-name: "gitops-meta-repo-cluster-gitops-rancher-cluster"
+            meta.helm.sh/release-namespace: "kube-system"
+        labels:
+            app.kubernetes.io/managed-by: "Helm"
+            meta.helm.sh/release-name: "gitops-meta-repo-cluster-gitops-rancher-cluster"
+            meta.helm.sh/release-namespace: "kube-system"
+    spec:
+        chart: cert-manager
+        repo: https://charts.jetstack.io
+        targetNamespace: cert-manager
+        createNamespace: true
+        version: 1.19.1
+        valuesContent: |-
+          # Helm chart values which make cert-manager comply with CIS, BSI and NSA
+          # security benchmarks and other best practices for deploying cert-manager in
+          # production.
+          crds:
+            enabled: true
+
+          global:
+             priorityClassName: system-cluster-critical
+
+          replicaCount: 2
+          podDisruptionBudget:
+            enabled: true
+            minAvailable: 1
+          automountServiceAccountToken: false
+          serviceAccount:
+            automountServiceAccountToken: false
+          volumes:
+          - name: serviceaccount-token
+            projected:
+              defaultMode: 0444
+              sources:
+              - serviceAccountToken:
+                  expirationSeconds: 3607
+                  path: token
+              - configMap:
+                  name: kube-root-ca.crt
+                  items:
+                  - key: ca.crt
+                    path: ca.crt
+              - downwardAPI:
+                  items:
+                  - path: namespace
+                    fieldRef:
+                      apiVersion: v1
+                      fieldPath: metadata.namespace
+          volumeMounts:
+          - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+            name: serviceaccount-token
+            readOnly: true
+
+          webhook:
+            replicaCount: 3
+            podDisruptionBudget:
+              enabled: true
+              minAvailable: 1
+            automountServiceAccountToken: true ## FIXME https://cert-manager.io/docs/installation/best-practice/ recommends this be set false but that fails
+            serviceAccount:
+              automountServiceAccountToken: true ## FIXME https://cert-manager.io/docs/installation/best-practice/ recommends this be set false but that fails
+            volumes:
+            - name: serviceaccount-token
+              projected:
+                defaultMode: 0444
+                sources:
+                - serviceAccountToken:
+                    expirationSeconds: 3607
+                    path: token
+                - configMap:
+                    name: kube-root-ca.crt
+                    items:
+                    - key: ca.crt
+                      path: ca.crt
+                - downwardAPI:
+                    items:
+                    - path: namespace
+                      fieldRef:
+                        apiVersion: v1
+                        fieldPath: metadata.namespace
+              volumeMounts:
+              - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+                name: serviceaccount-token
+                readOnly: true
+          cainjector:
+            extraArgs:
+            - --namespace=cert-manager
+            - --enable-certificates-data-source=false
+            replicaCount: 2
+            podDisruptionBudget:
+              enabled: true
+              minAvailable: 1
+            automountServiceAccountToken: false
+            serviceAccount:
+              automountServiceAccountToken: false
+            volumes:
+            - name: serviceaccount-token
+              projected:
+                defaultMode: 0444
+                sources:
+                - serviceAccountToken:
+                    expirationSeconds: 3607
+                    path: token
+                - configMap:
+                    name: kube-root-ca.crt
+                    items:
+                    - key: ca.crt
+                      path: ca.crt
+                - downwardAPI:
+                    items:
+                    - path: namespace
+                      fieldRef:
+                        apiVersion: v1
+                        fieldPath: metadata.namespace
+            volumeMounts:
+            - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+              name: serviceaccount-token
+              readOnly: true
+
+          startupapicheck:
+            automountServiceAccountToken: false
+            serviceAccount:
+              automountServiceAccountToken: false
+            volumes:
+            - name: serviceaccount-token
+              projected:
+                defaultMode: 0444
+                sources:
+                - serviceAccountToken:
+                    expirationSeconds: 3607
+                    path: token
+                - configMap:
+                    name: kube-root-ca.crt
+                    items:
+                    - key: ca.crt
+                      path: ca.crt
+                - downwardAPI:
+                    items:
+                    - path: namespace
+                      fieldRef:
+                        apiVersion: v1
+                        fieldPath: metadata.namespace
+            volumeMounts:
+            - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+              name: serviceaccount-token
+              readOnly: true
+          
+- path: /var/lib/rancher/rke2/server/manifests/post-deploy-manifests/rancher.yaml
+  content: |
+    ---
+    apiVersion: helm.cattle.io/v1
+    kind: HelmChart
+    metadata:
+        name: rancher
+        namespace: kube-system
+        annotations:
+            app.kubernetes.io/managed-by: "Helm"
+            meta.helm.sh/release-name: "gitops-meta-repo-cluster-gitops-rancher-cluster"
+            meta.helm.sh/release-namespace: "kube-system"
+        labels:
+            app.kubernetes.io/managed-by: "Helm"
+            meta.helm.sh/release-name: "gitops-meta-repo-cluster-gitops-rancher-cluster"
+            meta.helm.sh/release-namespace: "kube-system
+    spec:
+        chart: rancher
+        repo: https://releases.rancher.com/server-charts/stable
+        targetNamespace: cattle-system
+        createNamespace: true
+        version: v2.12.2
+        valuesContent: |-
+          hostname: rancher-192.168.1.152.sslip.io
+          bootstrapPassword: 1234!@#$qewrQWER
+          replicas: 3
+          ## STIG Configs
+          auditLog:
+            level: 2
+- path: /var/lib/rancher/rke2/server/manifests/post-deploy-manifests/rancher-cluster-gitops.yaml  
+  content: |
+    
+
+    ---
+    apiVersion: fleet.cattle.io/v1alpha1
+    kind: GitRepo
+    metadata:
+      name: gitops-meta-repo
+      annotations:
+        {}
+        #  key: string
+      labels:
+        {}
+        #  key: string
+      namespace: fleet-local
+    spec:
+      branch: main
+      correctDrift:
+        enabled: true
+      clientSecretName: gitops-git-auth
+      paths:
+      
+        - cluster-gitops/datacenters/aws/us-east/clusters/cluster-1/cluster
+          - cluster-gitops/rancher-cluster/rancher
+      repo: git@github.com:andrew-morris-rgs/rancher-dev-env.git
+      targets:
+        - clusterSelector:
+            matchExpressions:
+              - key: provider.cattle.io
+                operator: NotIn
+                values:
+                  - harvester
+- path: /var/lib/rancher/rke2/server/manifests/post-deploy-manifests/rancher-cluster-gitops-secret.yaml
+  content: |
+    apiVersion: v1
+    data:
+      ssh-privatekey: LS0tLS1CRUdJTiBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tLS0KYjNCbGJuTnphQzFyWlhrdGRqRUFBQUFBQkc1dmJtVUFBQUFFYm05dVpRQUFBQUFBQUFBQkFBQUFNd0FBQUF0emMyZ3RaVwpReU5UVXhPUUFBQUNBMFVGQTFaRk1vdWhxcGRHaXdHc3RrS2NrV1NvM2RDR3FzRklZZVZnSkVCd0FBQUtqTUpocE56Q1lhClRRQUFBQXR6YzJndFpXUXlOVFV4T1FBQUFDQTBVRkExWkZNb3VocXBkR2l3R3N0a0tja1dTbzNkQ0dxc0ZJWWVWZ0pFQncKQUFBRUNsYkVISnFlR2YxYnVpNm44Tit4MVNnWXlWdzY5L3ZYYXRhemkyUEs0Y2RUUlFVRFZrVXlpNkdxbDBhTEFheTJRcAp5UlpLamQwSWFxd1VoaDVXQWtRSEFBQUFJR0Z1WkhKbGR5NXRiM0p5YVhOQVFVMXZjbkpwY3kxVVNESXlOME5SU2tzM0FRCklEQkFVPQotLS0tLUVORCBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tLS0K
+    kind: Secret
+    metadata:
+      name: gitops-git-auth
+      namespace: fleet-local
+      uid: c0b5dee4-babc-449c-8d1f-85d4232c39dc
+    type: kubernetes.io/ssh-auth
+  
+
+
+
+
+
+- path: /var/lib/rancher/rke2/server/manifests/post-deploy-manifests/aws_cloud_controller_manager.yaml
+  content: |
+    ---
+    apiVersion: helm.cattle.io/v1
+    kind: HelmChart
+    metadata:
+        name: aws-cloud-controller-manager
+        namespace: kube-system
+    spec:
+        chart: aws-cloud-controller-manager/aws-cloud-controller-manager
+        repo: https://kubernetes.github.io/cloud-provider-aws
+        targetNamespace: kube-system
+        valuesContent: |-hostNetworking: true
+          tolerations:
+            - effect: NoSchedule
+              key: node.cloudprovider.kubernetes.io/uninitialized
+              value: 'true'
+            - effect: NoSchedule
+              value: 'true'
+              key: node-role.kubernetes.io/control-plane
+          nodeSelector:
+            node-role.kubernetes.io/control-plane: 'true'
+          args:
+            - --configure-cloud-routes=false
+            - --use-service-account-credentials=true
+            - --v=2
+            - --cloud-provider=aws
+          clusterRoleRules:
+            - apiGroups:
+                - ""
+              resources:
+                - events
+              verbs:
+                - create
+                - patch
+                - update
+            - apiGroups:
+                - ""
+              resources:
+                - nodes
+              verbs:
+                - '*'
+            - apiGroups:
+                - ""
+              resources:
+                - nodes/status
+              verbs:
+                - patch
+            - apiGroups:
+                - ""
+              resources:
+                - services
+              verbs:
+                - list
+                - patch
+                - update
+                - watch
+            - apiGroups:
+                - ""
+              resources:
+                - services/status
+              verbs:
+                - list
+                - patch
+                - update
+                - watch
+            - apiGroups:
+               - ''
+              resources:
+                - serviceaccounts
+              verbs:
+              - create
+              - get
+            - apiGroups:
+                - ""
+              resources:
+                - persistentvolumes
+              verbs:
+                - get
+                - list
+                - update
+                - watch
+            - apiGroups:
+                - ""
+              resources:
+                - endpoints
+              verbs:
+                - create
+                - get
+                - list
+                - watch
+                - update
+            - apiGroups:
+                - coordination.k8s.io
+              resources:
+                - leases
+              verbs:
+                - create
+                - get
+                - list
+                - watch
+                - update
+            - apiGroups:
+                - ""
+              resources:
+                - serviceaccounts/token
+              verbs:
+                - create

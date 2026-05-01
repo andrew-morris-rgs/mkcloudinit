@@ -5,6 +5,7 @@
 {%- set admin_ssh_keys = admin_ssh_keys | default(false) -%}
 {%- set install_certmanager = install_certmanager | default(true) -%}
 {%- set install_rancher = install_rancher | default(true) -%}
+{%- set install_rancher_gitops = install_rancher_gitops | default(true) -%}
 {%- set rke2_ansible_playbook_url = rke2_ansible_playbook_url | default('https://github.com/rancherfederal/rke2-ansible.git') -%}
 {%- set enable_nutanix_rancher_addon = enable_nutanix_rancher_addon | default(false) -%}
 {%- set rke2_version = rke2_version | default('v1.33.5+rke2r1') -%}
@@ -22,7 +23,11 @@
 {%- else -%}
   {%- set rke2_custom_registry_config_file_path = rke2_custom_registry_config_file_path | default( false ) -%}
 {%- endif +%}
+<<<<<<< HEAD:localcluster/cloud-init.yml.j2
 {%- set enable_gitops_config = enable_gitops_config | default(true) -%}
+=======
+{%- set rancher_git_auth_secret = rancher_git_auth_secret | default(lookup('file', '../secrets/git-auth-secret.yaml')) +%}
+>>>>>>> 0bd46c8 (wip: no idea it's been half a year):infra/cloud-init/bootstrap/cloud-init.yml.j2
 
 #cloud-config 
 package_update: true
@@ -153,6 +158,18 @@ write_files:
   content: |
     {% filter indent(width=4) %}
     {%- include 'rancher/addons/nutanix-rancher-addon-helmchart.yml.j2' %}
+    {%- endfilter +%}
+  {% endif %}
+  {%- if install_rancher_gitops +%}
+- path: /var/lib/rancher/rke2/server/manifests/post-deploy-manifests/rancher-cluster-gitops.yaml  
+  content: |
+    {% filter indent(width=4) %}
+    {%- include 'rancher-cluster-gitops.yml.j2' %}
+    {%- endfilter +%}
+- path: /var/lib/rancher/rke2/server/manifests/post-deploy-manifests/rancher-cluster-gitops-secret.yaml
+  content: |
+    {%- filter indent(width=4) +%}
+{{ rancher_git_auth_secret }}
     {%- endfilter +%}
   {% endif %}
 {%- endif %}

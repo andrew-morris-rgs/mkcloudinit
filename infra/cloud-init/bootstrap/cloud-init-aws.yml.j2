@@ -1,4 +1,4 @@
-{%- include 'localcluster/cloud-init.yml.j2' %}
+{%- include 'infra/cloud-init/bootstrap/cloud-init.yml.j2' %}
 - path: /var/lib/rancher/rke2/server/manifests/post-deploy-manifests/aws_cloud_controller_manager.yaml
   content: |
     {% filter indent(width=4) %}

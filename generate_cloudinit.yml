@@ -23,24 +23,29 @@
         src: rancher/rancher-helm-values.yml.j2
         dest: rancher/rancher-helm-values.yml
         mode: "0640"
+    - name: Create fleet config for rancher cluster
+      ansible.builtin.template:
+        src: rancher-cluster-gitops.yml.j2
+        dest: rancher-cluster-gitops.yml
+        mode: "0640"
     - name: Create cloud-init configuration
       ansible.builtin.template:
-        src: localcluster/cloud-init.yml.j2
-        dest: localcluster/cloud-init.yml
+        src: infra/cloud-init/bootstrap/cloud-init.yml.j2
+        dest: infra/cloud-init/bootstrap/cloud-init.yml
         mode: "0640"
     - name: Create aws specfic cloud-init configuration
       ansible.builtin.template:
-        src: localcluster/cloud-init-aws.yml.j2
-        dest: localcluster/cloud-init-aws.yml
+        src: infra/cloud-init/bootstrap/cloud-init-aws.yml.j2
+        dest: infra/cloud-init/bootstrap/cloud-init-aws.yml
         mode: "0640"
     - name: Create Fleet repo Helmchart configuration
       ansible.builtin.template:
         src: localcluster/fleet/fleet-repo-helmchart.yml.j2
         dest: localcluster/fleet/fleet-repo-helmchart.yml
     - name: Base64 encode the rendered template
-      command: base64 -w 0 localcluster/cloud-init.yml
+      ansible.builtin.command: base64 -w 0 infra/cloud-init/bootstrap/cloud-init.yml
       register: base64_cloud_init
-      #changed_when: my_output.rc != 0
+      changed_when: base64_cloud_init.rc != 0
     - name: Create rancher-harvester configuration
       ansible.builtin.template:
         src: infra/infra/harvester/rancher-harvester.yml.j2
