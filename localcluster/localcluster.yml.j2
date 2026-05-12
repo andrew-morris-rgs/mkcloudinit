@@ -3,7 +3,14 @@
 apiVersion: management.cattle.io/v3
 kind: Cluster
 metadata:
+  annotations:
+    app.kubernetes.io/managed-by: "Helm"
+    meta.helm.sh/release-name: "gitops-meta-repo-cluster-gitops-rancher-cluster"
+    meta.helm.sh/release-namespace: "default"
   labels:
+    app.kubernetes.io/managed-by: "Helm"
+    meta.helm.sh/release-name: "gitops-meta-repo-cluster-gitops-rancher-cluster"
+    meta.helm.sh/release-namespace: "default
     provider.cattle.io: rke2
   name: local
 spec:

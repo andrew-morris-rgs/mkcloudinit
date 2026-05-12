@@ -1,0 +1,41 @@
+{%- set rancher_gitrepo = rancher_gitrepo | default(
+"git@github.com:andrew-morris-rgs/rancher-dev-env.git") +%}
+{%- set rancher_git_branch = rancher_git_branch | default("main") +%}
+{%- set rancher_git_path = rancher_git_path | default("cluster-gitops/rancher-cluster/rancher") +%}
+{%- set rancher_git_secret = rancher_git_secret | default("gitops-git-auth") +%}
+{%- set rancher_downstream_clusters_paths = rancher_downstream_clusters_paths | default("cluster-gitops/datacenters/aws/us-east/clusters/cluster-1/cluster") +%}
+
+---
+apiVersion: fleet.cattle.io/v1alpha1
+kind: GitRepo
+metadata:
+  name: gitops-meta-repo
+  annotations:
+    {}
+    #  key: string
+  labels:
+    {}
+    #  key: string
+  namespace: fleet-local
+spec:
+  branch: {{ rancher_git_branch }}
+  correctDrift:
+    enabled: true
+  clientSecretName: {{ rancher_git_secret }}
+  paths:
+  {% if rancher_downstream_clusters_paths %}
+{%- for path in rancher_downstream_clusters_paths.split() +%}
+    - {{ path }}
+{%- endfor +%}
+  {% endif %}
+  {% if fleet_managed_rancher %}
+    - {{ rancher_git_path }}
+  {% endif %}
+  repo: {{ rancher_gitrepo }}
+  targets:
+    - clusterSelector:
+        matchExpressions:
+          - key: provider.cattle.io
+            operator: NotIn
+            values:
+              - harvester
