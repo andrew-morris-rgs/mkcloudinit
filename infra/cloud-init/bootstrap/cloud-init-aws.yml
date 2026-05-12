@@ -55,14 +55,6 @@ write_files:
     metadata:
         name: cert-manager
         namespace: kube-system
-        annotations:
-            app.kubernetes.io/managed-by: "Helm"
-            meta.helm.sh/release-name: "gitops-meta-repo-cluster-gitops-rancher-cluster"
-            meta.helm.sh/release-namespace: "kube-system"
-        labels:
-            app.kubernetes.io/managed-by: "Helm"
-            meta.helm.sh/release-name: "gitops-meta-repo-cluster-gitops-rancher-cluster"
-            meta.helm.sh/release-namespace: "kube-system"
     spec:
         chart: cert-manager
         repo: https://charts.jetstack.io
@@ -212,14 +204,6 @@ write_files:
     metadata:
         name: rancher
         namespace: kube-system
-        annotations:
-            app.kubernetes.io/managed-by: "Helm"
-            meta.helm.sh/release-name: "gitops-meta-repo-cluster-gitops-rancher-cluster"
-            meta.helm.sh/release-namespace: "kube-system"
-        labels:
-            app.kubernetes.io/managed-by: "Helm"
-            meta.helm.sh/release-name: "gitops-meta-repo-cluster-gitops-rancher-cluster"
-            meta.helm.sh/release-namespace: "kube-system
     spec:
         chart: rancher
         repo: https://releases.rancher.com/server-charts/stable
@@ -255,9 +239,8 @@ write_files:
         enabled: true
       clientSecretName: gitops-git-auth
       paths:
-      
         - cluster-gitops/datacenters/aws/us-east/clusters/cluster-1/cluster
-          - cluster-gitops/rancher-cluster/rancher
+        - cluster-gitops/rancher-cluster
       repo: git@github.com:andrew-morris-rgs/rancher-dev-env.git
       targets:
         - clusterSelector:
