@@ -13,11 +13,11 @@ ansible
 ansible-playbook -e '
   default_admin=false
   cert_manager_replica_count=2
-  cert_manager_version=v1.18.0
+  cert_manager_version=v1.20.2
   cert_manager_repo=https://charts.jetstack.io
   cert_manager_webhook_replica_count=3
   cert_manager_cainjector_replica_count=2
-  rancher_version=v2.11.2
+  rancher_version=v2.14.2
   rancher_hostname=rancher.yourdomain.com
   rancher_bootstrap_password=admin
   rancher_replicas=3
