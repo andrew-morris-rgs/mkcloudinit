@@ -15,7 +15,7 @@ images:
   - location: "https://dl.rockylinux.org/pub/rocky/9/images/aarch64/Rocky-9-GenericCloud.latest.aarch64.qcow2"
     arch: "aarch64"
 
-cpus: {{ [ ansible_processor_cores|int - 1 , 4 ] | min }}
+cpus: {{ [ ansible_facts['processor_cores']|int - 1 , 4 ] | min }}
 memory: "{{ [ ansible_facts['memtotal_mb'] - 2000 , 20000 ] | min }}MiB"
 disk: "100GiB"
 
@@ -60,7 +60,5 @@ provision:
     script: |
       #!/bin/bash
       cat <<EOF > /etc/cloud/cloud.cfg.d/99_custom.cfg
-      {%- filter indent(width=6) %}
-      {%- include 'localcluster/cloud-init.yml.j2' %}
-      {%- endfilter +%}
+      {{ lookup('template', '../cloud-init/bootstrap/cloud-init.yml.j2') | indent(6) }}
       EOF

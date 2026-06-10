@@ -5,9 +5,8 @@ rancher/fleet.yml
 certmanager/certmanager-helm-values.yml
 certmanager/certmanager-helmchart.yml
 certmanager/fleet.yml
-localcluster/cloud-init-aws.yml
-localcluster/cloud-init.yml
-localcluster/cloud-init-aws.yml
+infra/cloud-init/bootstrap/cloud-init-aws.yml
+infra/cloud-init/bootstrap/cloud-init.yml
 localcluster/localcluster.yml
 localcluster/fleet.yml
 infra/harvester/rancher-harvester.yml
@@ -24,3 +23,4 @@ cluster-gitrepo.yml
 .terraform*
 .vscode
 .ansible
+secrets/*

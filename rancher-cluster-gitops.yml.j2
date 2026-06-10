@@ -4,7 +4,7 @@
 {%- set rancher_git_path = rancher_git_path | default("cluster-gitops/rancher-cluster/rancher") +%}
 {%- set rancher_git_secret = rancher_git_secret | default("gitops-git-auth") +%}
 {%- set rancher_downstream_clusters_paths = rancher_downstream_clusters_paths | default("cluster-gitops/datacenters/aws/us-east/clusters/cluster-1/cluster") +%}
-
+{%- set fleet_managed_rancher = fleet_managed_rancher | default("false") +%}
 ---
 apiVersion: fleet.cattle.io/v1alpha1
 kind: GitRepo
@@ -18,20 +18,20 @@ metadata:
     #  key: string
   namespace: fleet-local
 spec:
-  branch: {{ rancher_git_branch }}
+  branch: "{{ rancher_git_branch }}"
   correctDrift:
     enabled: true
-  clientSecretName: {{ rancher_git_secret }}
+  clientSecretName: "{{ rancher_git_secret }}"
   paths:
-  {% if rancher_downstream_clusters_paths %}
-{%- for path in rancher_downstream_clusters_paths.split() +%}
-    - {{ path }}
-{%- endfor +%}
-  {% endif %}
-  {% if fleet_managed_rancher %}
-    - {{ rancher_git_path }}
-  {% endif %}
-  repo: {{ rancher_gitrepo }}
+  {%- if rancher_downstream_clusters_paths  +%}
+  {%- for path in rancher_downstream_clusters_paths.splitlines() +%}
+    - {{ path | trim }}
+  {%- endfor +%}
+  {%- endif +%}
+  {%- if fleet_managed_rancher +%}
+    - {{ rancher_git_path | trim }}
+  {%- endif +%}
+  repo: "{{ rancher_gitrepo }}"
   targets:
     - clusterSelector:
         matchExpressions:

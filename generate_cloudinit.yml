@@ -48,13 +48,13 @@
       changed_when: base64_cloud_init.rc != 0
     - name: Create rancher-harvester configuration
       ansible.builtin.template:
-        src: infra/infra/harvester/rancher-harvester.yml.j2
-        dest: infra/infra/harvester/rancher-harvester.yml
+        src: infra/harvester/rancher-harvester.yml.j2
+        dest: infra/harvester/rancher-harvester.yml
         mode: "0640"
     - name: Create rancher-lima configuration
       ansible.builtin.template:
-        src: infra/infra/lima/rancher-lima.yml.j2
-        dest: infra/infra/lima/rancher-lima.yml
+        src: infra/lima/rancher-lima.yml.j2
+        dest: infra/lima/rancher-lima.yml
         mode: "0640"
     - name: Create rancher-aws configuration
       ansible.builtin.template:

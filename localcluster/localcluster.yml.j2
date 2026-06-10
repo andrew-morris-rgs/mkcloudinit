@@ -10,9 +10,9 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     meta.helm.sh/release-name: "gitops-meta-repo-cluster-gitops-rancher-cluster"
-    meta.helm.sh/release-namespace: "default
+    meta.helm.sh/release-namespace: "default"
     provider.cattle.io: rke2
   name: local
 spec:
   rke2Config:
-    kubernetesVersion: {{ rke2_version }}
+    kubernetesVersion: "{{ rke2_version }}"

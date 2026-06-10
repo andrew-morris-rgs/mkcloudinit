@@ -32,15 +32,15 @@ metadata:
     #  key: string
   namespace: fleet-local
 spec:
-  branch: {{ gitops_branch }}
+  branch: "{{ gitops_branch }}"
   correctDrift:
-    enabled: {{ gitops_correct_drift_enabled }}
-  clientSecretName: {{ gitops_client_secret_name }}
+    enabled: "{{ gitops_correct_drift_enabled }}"
+  clientSecretName: "{{ gitops_client_secret_name }}"
   paths:
-    {% for path in gitops_paths %}
+  {%- for path in gitops_paths +%}
     - {{ path }}
-    {% endfor %}
-  repo: {{ gitops_repo_url }}
+  {%- endfor +%}
+  repo: "{{ gitops_repo_url }}"
   targets:
     - clusterSelector:
         matchExpressions:

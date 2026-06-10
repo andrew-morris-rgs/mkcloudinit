@@ -11,6 +11,4 @@ spec:
     repo: {{ aws_cloud_controller_helm_chart_repo }}
     targetNamespace: kube-system
     valuesContent: |-
-     {%- filter indent(width=6) %}
-     {%- include 'localcluster/aws/aws-cloud-controller-manager-helm-values.yml.j2' %}
-     {%- endfilter %}
+     {{ lookup('template', 'localcluster/aws/aws-cloud-controller-manager-helm-values.yml.j2') | indent(6)}}

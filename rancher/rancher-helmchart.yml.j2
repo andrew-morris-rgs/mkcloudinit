@@ -13,14 +13,12 @@ metadata:
     labels:
         app.kubernetes.io/managed-by: "Helm"
         meta.helm.sh/release-name: "gitops-meta-repo-cluster-gitops-rancher-cluster"
-        meta.helm.sh/release-namespace: "kube-system
+        meta.helm.sh/release-namespace: "kube-system"
 spec:
     chart: rancher
-    repo: {{ rancher_repo }}
+    repo: "{{ rancher_repo }}"
     targetNamespace: cattle-system
     createNamespace: true
-    version: {{ rancher_version }}
+    version: "{{ rancher_version }}"
     valuesContent: |-
-     {%- filter indent(width=6) %}
-     {%- include 'rancher/rancher-helm-values.yml.j2' %}
-     {%- endfilter %}
+      {{ lookup('template', 'rancher/rancher-helm-values.yml.j2') | indent(6) }}

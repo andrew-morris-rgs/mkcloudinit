@@ -1,11 +1,11 @@
-{%- set cert_manager_version = cert_manager_version | default('1.20.2') -%}
+{%- set cert_manager_version = cert_manager_version | default('v1.20.2') -%}
 {%- set cert_manager_repo = cert_manager_repo | default('https://charts.jetstack.io') -%}
 ---
 apiVersion: helm.cattle.io/v1
 kind: HelmChart
 metadata:
-    name: cert-manager
-    namespace: kube-system
+    name: "cert-manager"
+    namespace: "kube-system"
     annotations:
         app.kubernetes.io/managed-by: "Helm"
         meta.helm.sh/release-name: "gitops-meta-repo-cluster-gitops-rancher-cluster"
@@ -16,12 +16,10 @@ metadata:
         meta.helm.sh/release-namespace: "kube-system"
 spec:
     chart: cert-manager
-    repo: {{ cert_manager_repo }}
-    targetNamespace: cert-manager
+    repo: "{{ cert_manager_repo }}"
+    targetNamespace: "cert-manager"
     createNamespace: true
-    version: {{ cert_manager_version }}
+    version: "{{ cert_manager_version }}"
     valuesContent: |-
-      {% filter indent(width=6) %}
-      {%- include 'certmanager/certmanager-helm-values.yml.j2' %}
-      {%- endfilter +%}
+      {{ lookup('template', 'certmanager/certmanager-helm-values.yml.j2') | indent(6)}}
       

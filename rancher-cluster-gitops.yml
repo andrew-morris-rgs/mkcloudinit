@@ -1,5 +1,4 @@
 
-
 ---
 apiVersion: fleet.cattle.io/v1alpha1
 kind: GitRepo
@@ -13,15 +12,14 @@ metadata:
     #  key: string
   namespace: fleet-local
 spec:
-  branch: main
+  branch: "main"
   correctDrift:
     enabled: true
-  clientSecretName: gitops-git-auth
+  clientSecretName: "gitops-git-auth"
   paths:
-  
     - cluster-gitops/datacenters/aws/us-east/clusters/cluster-1/cluster
-      - cluster-gitops/rancher-cluster/rancher
-  repo: git@github.com:andrew-morris-rgs/rancher-dev-env.git
+    - cluster-gitops/rancher-cluster/rancher
+  repo: "git@github.com:andrew-morris-rgs/rancher-dev-env.git"
   targets:
     - clusterSelector:
         matchExpressions:
