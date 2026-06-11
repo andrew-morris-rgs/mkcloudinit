@@ -119,6 +119,11 @@ resource "aws_security_group" "bootstrap_sg" {
   }
 }
 
+locals {
+aws_ec2_provisioner_secret = indent(4, file("secrets/aws-cred-secret.yaml"))
+fleet_secret_yaml = indent(4, file("secrets/git-auth-secret.yaml"))
+}
+
 # Create an EC2 instance for the Bootstrap cluster
 resource "aws_instance" "bootstrap_node" {
   provider                    = aws.us-east-1
@@ -127,7 +132,11 @@ resource "aws_instance" "bootstrap_node" {
   subnet_id                   = aws_subnet.bootstrap_subnet.id
   vpc_security_group_ids      = [aws_security_group.bootstrap_sg.id]
   associate_public_ip_address = true
-  user_data                   = file("../../infra/cloud-init/bootstrap/cloud-init-aws.yml")
+  user_data                   = templatefile("../../infra/cloud-init/bootstrap/cloud-init-aws.yml.tpfl",
+                                            {additional_manifests = {"fleet-secret.yaml" = locals.fleet_secret_yaml,
+                                                                     "aws-ec2-provisioner-secret.yaml" = locals.aws_ec2_provisioner_secret
+                                                                     }
+                                            })
   root_block_device {
     volume_size = 60
   }
