@@ -42,6 +42,7 @@
       ansible.builtin.template:
         src: localcluster/fleet/fleet-repo-helmchart.yml.j2
         dest: localcluster/fleet/fleet-repo-helmchart.yml
+        mode: "0640"
     - name: Base64 encode the rendered template
       ansible.builtin.command: base64 -w 0 infra/cloud-init/bootstrap/cloud-init.yml
       register: base64_cloud_init
@@ -70,8 +71,9 @@
       ansible.builtin.template:
         src: cluster-gitrepo.yml.j2
         dest: cluster-gitrepo.yml
+        mode: "0640"
     - name: Create rancher-aws.tf config
       ansible.builtin.template:
         src: infra/aws/rancher-aws.tf.j2
         dest: infra/aws/rancher-aws.tf
-
+        mode: "0640"
