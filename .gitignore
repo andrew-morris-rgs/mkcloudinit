@@ -6,6 +6,7 @@ certmanager/certmanager-helm-values.yml
 certmanager/certmanager-helmchart.yml
 certmanager/fleet.yml
 infra/cloud-init/bootstrap/cloud-init-aws.yml
+infra/cloud-init/bootstrap/cloud-init-aws.yml.tftpl
 infra/cloud-init/bootstrap/cloud-init.yml
 localcluster/localcluster.yml
 localcluster/fleet.yml
