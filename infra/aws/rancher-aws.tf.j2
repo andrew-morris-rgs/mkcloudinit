@@ -120,8 +120,8 @@ resource "aws_security_group" "bootstrap_sg" {
 }
 
 locals {
-aws_ec2_provisioner_secret = indent(4, file("secrets/aws-cred-secret.yaml"))
-fleet_secret_yaml = indent(4, file("secrets/git-auth-secret.yaml"))
+  aws_ec2_provisioner_secret = indent(4, file("../../secrets/aws-cred-secret.yaml"))
+  fleet_secret_yaml          = indent(4, file("../../secrets/git-auth-secret.yaml"))
 }
 
 # Create an EC2 instance for the Bootstrap cluster
@@ -132,9 +132,9 @@ resource "aws_instance" "bootstrap_node" {
   subnet_id                   = aws_subnet.bootstrap_subnet.id
   vpc_security_group_ids      = [aws_security_group.bootstrap_sg.id]
   associate_public_ip_address = true
-  user_data                   = templatefile("../../infra/cloud-init/bootstrap/cloud-init-aws.yml.tpfl",
-                                            {additional_manifests = {"fleet-secret.yaml" = locals.fleet_secret_yaml,
-                                                                     "aws-ec2-provisioner-secret.yaml" = locals.aws_ec2_provisioner_secret
+  user_data                   = templatefile("../cloud-init/bootstrap/cloud-init-aws.yml.tftpl",
+                                            {additional_manifests = {"fleet-secret.yaml" = local.fleet_secret_yaml,
+                                                                     "aws-ec2-provisioner-secret.yaml" = local.aws_ec2_provisioner_secret
                                                                      }
                                             })
   root_block_device {
@@ -159,18 +159,7 @@ resource "null_resource" "update_helmchart" {
   }
 }
 
-# Update the hostname in the cloud-init-aws.yml file before the instance is created
-resource "null_resource" "update_cloudinit" {
-  triggers = {
-    always_run = timestamp()
-  }
 
-  provisioner "local-exec" {
-    command = <<EOT
-      sed -i "s/hostname: .*/hostname: ${aws_instance.bootstrap_node.public_dns}/" ../../infra/cloud-init/bootstrap/cloud-init-aws.yml
-    EOT
-  }
-}
 
 # Output the public IP of the Bootstrap node
 output "bootstrap_node_public_ip" {
@@ -180,5 +169,14 @@ output "bootstrap_node_public_ip" {
 # Output the public DNS name of the Bootstrap node
 output "bootstrap_node_public_dns" {
   value = aws_instance.bootstrap_node.public_dns
+}
+
+# Output the rendered cloud-init
+output "cloud-init" {
+  value = templatefile("../cloud-init/bootstrap/cloud-init-aws.yml.tftpl",
+                                            {additional_manifests = {"fleet-secret.yaml" = local.fleet_secret_yaml,
+                                                                     "aws-ec2-provisioner-secret.yaml" = local.aws_ec2_provisioner_secret
+                                                                     }
+                                            })
 }
 

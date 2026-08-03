@@ -2,3 +2,9 @@
 - path: /var/lib/rancher/rke2/server/manifests/post-deploy-manifests/aws_cloud_controller_manager.yaml
   content: |
     {{ lookup('template', 'localcluster/aws/aws-cloud-controller-manager-helmchart.yml.j2') | indent(4) }}
+
+%{ for manifest_filename, manifest_string in additional_manifests }
+- path: /var/lib/rancher/rke2/server/manifests/post-deploy-manifests/${ manifest_filename }
+  content: |
+${ manifest_string }
+%{ endfor ~}

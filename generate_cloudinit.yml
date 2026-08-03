@@ -35,8 +35,8 @@
         mode: "0640"
     - name: Create aws specfic cloud-init configuration
       ansible.builtin.template:
-        src: infra/cloud-init/bootstrap/cloud-init-aws.yml.j2
-        dest: infra/cloud-init/bootstrap/cloud-init-aws.yml
+        src: infra/cloud-init/bootstrap/cloud-init-aws.yml.tftpl.j2
+        dest: infra/cloud-init/bootstrap/cloud-init-aws.yml.tftpl
         mode: "0640"
     - name: Create Fleet repo Helmchart configuration
       ansible.builtin.template:
